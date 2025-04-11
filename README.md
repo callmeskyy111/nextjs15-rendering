@@ -845,3 +845,143 @@ export default function Page() {
 React Server Components are like a **supercharged evolution of SSR** — letting us optimize performance by minimizing JS and intelligently splitting what happens where. In **Next.js 15**, we get the full RSC experience automatically through the **App Router**, and it’s a game-changer for modern React apps.
 
 ---
+
+## 🌱 What is RSC Rendering Lifecycle?
+
+The **RSC rendering lifecycle** refers to the **sequence of events** that occur from the time a request is made (e.g., user visits a page) to the time the fully rendered HTML/React tree is served to the browser — with **Server Components** being evaluated **on the server only**, and **Client Components** rendered/hydrated on the client.
+
+---
+
+## 🔄 Full Lifecycle Overview (Step-by-Step)
+
+Here's a breakdown of how rendering flows in **Next.js 15 using RSC**:
+
+---
+
+### **1. Request Initiated**
+
+- A user visits a route (e.g., `/dashboard`) → triggers a **route match**.
+- Next.js starts by resolving the **layout**, **template**, and **page** files.
+
+---
+
+### **2. Server Components Evaluated**
+
+- All components **default to Server Components** unless they have `"use client"` at the top.
+- Server Components:
+  - Fetch data (e.g., from a DB or API)
+  - Build the React tree (on the server)
+  - No JavaScript is sent for these components
+
+🧠 These are **never sent to the client**, only their **HTML and React payload** is.
+
+---
+
+### **3. Boundary Identification**
+
+- During render, Next.js identifies **Client Components** inside the tree.
+- These boundaries are separated into **islands**.
+- For each `"use client"` component:
+  - A placeholder is inserted into the HTML
+  - Its JavaScript is shipped separately
+
+---
+
+### **4. Streaming Starts (via Flight Protocol)**
+
+- The server starts **streaming the output** of the Server Component tree (as a special format called the **Flight payload**).
+- The client (browser) **gradually receives** the HTML and component metadata.
+
+📦 Think of it like progressive hydration: HTML comes first, followed by interactive JS islands.
+
+---
+
+### **5. Client Receives the Page**
+
+- Static content (HTML) is shown immediately — this is the **Server Component part**.
+- Next.js loads the JS bundle for each Client Component.
+- Each island gets **hydrated** (interactivity enabled) using React.
+
+This is where `useState`, `useEffect`, `onClick`, etc., start to work.
+
+---
+
+### **6. Interactions Begin (Client Only)**
+
+Once hydration is complete:
+- UI becomes interactive
+- Further interactions (clicks, inputs) are handled by **Client Components**
+- Server Components don’t re-run unless we navigate away or fetch new data
+
+---
+
+## 🚨 Key Characteristics of RSC Lifecycle
+
+| Phase                 | Location | Can Use Browser APIs | Sends JS to Client | Can Fetch Data |
+|----------------------|----------|----------------------|--------------------|----------------|
+| Initial Render        | Server   | ❌ No                | ❌ No              | ✅ Yes         |
+| Client Hydration      | Client   | ✅ Yes               | ✅ Yes             | ⚠️ Only via API |
+| Updates (Navigation) | Server/Client | Depends          | Depends            | Depends        |
+
+---
+
+## 🎨 Visual Representation (Simplified)
+
+```plaintext
+User Requests Page
+        ↓
+Match Route Layout/Template/Page
+        ↓
+Run Server Components
+        ↓
+Detect Client Component Boundaries
+        ↓
+Stream HTML + Metadata (Flight)
+        ↓
+Client Loads Page
+        ↓
+Hydrate Client Components
+        ↓
+Interactive Page Ready
+```
+
+---
+
+## ✅ Benefits of This Lifecycle
+
+- ⚡ **Faster initial page load** (less JS sent)
+- 🧼 **Better separation of concerns** (data-fetching vs interactivity)
+- 🔐 **Security**: server-side logic stays hidden
+- 🧩 **Composable**: use both Server and Client components
+
+---
+
+## 🧪 When Does This Lifecycle Re-run?
+
+- On **initial page load**
+- On **navigation to a new route** (if not cached)
+- On **fetching new data using server actions or route handlers**
+
+---
+
+## ✨ Bonus Tip: Server Actions
+
+In Next.js 15, **Server Actions** can also trigger a partial re-run of this lifecycle. When a Server Action runs:
+- The Server Component (or specific subtree) is **re-evaluated**
+- The updated state is streamed to the client without full reload
+
+---
+
+## Summary Table
+
+| Aspect                      | Server Component                     | Client Component                      |
+|----------------------------|--------------------------------------|----------------------------------------|
+| Rendered Where?            | On the server                        | On the client                          |
+| Uses `"use client"`?       | ❌ No (default)                      | ✅ Yes                                 |
+| Can fetch data?            | ✅ Yes (directly)                    | ⚠️ Indirectly (via API calls)          |
+| JavaScript sent to client? | ❌ No                                | ✅ Yes                                 |
+| Lifecycle Events           | Evaluated once per request           | React hooks like `useEffect` apply     |
+| Interactivity              | ❌ No                                | ✅ Yes                                 |
+
+---
+![alt text](image.png)
