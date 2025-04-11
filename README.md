@@ -985,3 +985,5 @@ In Next.js 15, **Server Actions** can also trigger a partial re-run of this life
 
 ---
 ![alt text](image.png)
+
+![alt text](image-1.png)
